@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="52.28.177.237" id="ee4e6463-28d2-4d73-aa8e-14a938afa335" keyPath="C:\Users\Administrator\.ssh\MatveyServerBotKey.ppk" port="22" nameFormat="DESCRIPTIVE" username="ubuntu" />
+    </configs>
+  </component>
+</project>

@@ -1,7 +1,7 @@
 const {Telegraf} = require("telegraf");
 const crypto = require("crypto");
 const {User} = require("../models/users");
-
+const Message = require('../models/messages')
 const {session} = require('telegraf-session-mongodb');
 const {MongoClient} = require('mongodb');
 
@@ -18,7 +18,7 @@ const crmDataService = require("../services/crmData.service");
 
 const bot = new Telegraf('1807748047:AAF90Hn5v09drBQonYeH6H-NQCckUZ9Dx4Q')
 const admins = require('./admins.json')
-    const mongodbURI = `mongodb://${process.env.MONGO_HOST}/${process.env.MONGO_DB}` //TODO Change to env
+const mongodbURI = `mongodb://${process.env.MONGO_HOST}/${process.env.MONGO_DB}` //TODO Change to env
 
 MongoClient.connect(mongodbURI, {useNewUrlParser: true, useUnifiedTopology: true})
     .then(client => {
@@ -27,7 +27,7 @@ MongoClient.connect(mongodbURI, {useNewUrlParser: true, useUnifiedTopology: true
         bot.use(commandArgs())
 
         bot.launch()
-            .then( async r => {
+            .then(async r => {
                 await onLaunchJobs()
             })
     });
@@ -92,7 +92,7 @@ bot.command('regcourier', commandArgs(), async (ctx) => {
 
 })
 
-bot.command('delcourier',commandArgs(),  async (ctx) => {
+bot.command('delcourier', commandArgs(), async (ctx) => {
     if (!await isAdmin(ctx.from.username))
         return
 
@@ -158,11 +158,20 @@ bot.command('register', commandArgs(), async (ctx) => {
 })
 
 
-
 EventBus.on('courier-assigned', async (webhook) => {
+    let msgLead
+    if ( webhook.leads.add ) {
+        msgLead = await Message.findOne({lead_id: webhook.leads.add[0].id})
+    } else if ( webhook.leads.status ) {
+        msgLead = await Message.findOne({lead_id: webhook.leads.status[0].id})
+    }
+    if (msgLead) {
+        console.log('received courier assigned hook, but bot already has this lead.')
+        return
+    }
     const lead = await crmDataService.getLeadById(getLeadIdFromWebHook(webhook))
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
-    const { chatId, data } = await eventService.onCourierAssigned(lead.data, contact.data)
+    const {chatId, data} = await eventService.onCourierAssigned(lead.data, contact.data)
     await botService.sendNewOrderToCoruier(bot, chatId, data)
 })
 
@@ -178,12 +187,30 @@ function getLeadIdFromWebHook(webhook) {
 }
 
 EventBus.on('return-created', async (webhook) => {
-
+       let msgLead
+    if ( webhook.leads.add ) {
+        msgLead = await Message.findOne({lead_id: webhook.leads.add[0].id})
+    } else if ( webhook.leads.status ) {
+        msgLead = await Message.findOne({lead_id: webhook.leads.status[0].id})
+    }
+    if (msgLead) {
+        console.log('received return created hook, but bot already has this lead.')
+        return
+    }
     console.log('event return created')
     const lead = await crmDataService.getLeadById(getLeadIdFromWebHook(webhook))
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
     const {chatId, data} = await eventService.onCourierAssigned(lead.data, contact.data)
     await botService.sendNewOrderToCoruier(bot, chatId, data)
+})
+
+/**
+ * Уведомляем курьера о новом лиде. Новый лид сохраняется по ивенту msg.sent
+ */
+EventBus.on('lead.updated', async payload => {
+    console.log(payload)
+    console.log('catched  lead updated event')
+    await botService.sendUpdatedOrderToCourier(bot, payload)
 })
 
 // Обработчик начала диалога с ботом
@@ -207,6 +234,7 @@ bot.action(/ACCEPT_SHIPPING_+/, async (ctx) => {
     const {chatId, data, newLeadStageData} = await eventService.shippingAccepted(lead.data, contact.data)
     if (data.delivery_type === 'courier')
         await botService.sendOrderDetailsToCourier(bot, chatId, data)
+
     ctx.deleteMessage()
     await crmDataService.moveLeadToNextStage(newLeadStageData)
 })
@@ -237,7 +265,6 @@ bot.action(/SHIPPING_REJECTED_+/, async (ctx, bot) => {
     ctx.deleteMessage()
     await crmDataService.moveLeadToNextStage(newLeadStageData)
 });
-
 
 
 async function notifyAdminAboutError() {

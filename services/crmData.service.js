@@ -2,6 +2,7 @@ const axios = require('axios')
 const {Auth} = require("../models/auth");
 const EventBus = require('../eventBus')
 const moment = require('moment')
+const cfg = require('./crm-id-cfg.json')
 const client_id = '562a8b5e-730d-440c-a98a-92cb898d33d7'
 const client_secret = 'XYStVkG8Oncer5nqyo0isLPlGTc4EBfIlWbVqGMAadicGYdSOJSE7hT9g60j6pS5'
 
@@ -150,7 +151,23 @@ async function fetchLeadsByTrackingStatuses() {
                 'Authorization': `Bearer ${await getAccessToken()}`
             },
             params: {
-                "filter[statuses][0][status_id]": 40053640,
+                "filter[statuses][0][pipeline_id]": cfg.pipelines.courier.id,
+                "filter[statuses][0][status_id]": cfg.pipelines.courier.courier_assigned,
+
+                "filter[statuses][1][pipeline_id]": cfg.pipelines.courier.id,
+                "filter[statuses][1][status_id]": cfg.pipelines.courier.return_status_id,
+
+                "filter[statuses][2][pipeline_id]": cfg.pipelines.courier.id,
+                "filter[statuses][2][status_id]": cfg.pipelines.courier.awaiting_shipping,
+
+                "filter[statuses][3][pipeline_id]": cfg.pipelines.sdek.id,
+                "filter[statuses][3][status_id]": cfg.pipelines.sdek.courier_assigned,
+
+                "filter[statuses][4][pipeline_id]": cfg.pipelines.sdek.id,
+                "filter[statuses][4][status_id]": cfg.pipelines.sdek.return_status_id,
+
+                "limit": 250,
+                "with": "contacts"
             }
         },
     )

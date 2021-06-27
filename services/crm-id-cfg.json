@@ -1,0 +1,31 @@
+{
+  "pipelines": {
+    "sdek": {
+      "id": 4283047,
+      "return_status_id": 40095322,
+      "shipping_succeeded": 40053820,
+      "awaiting_shipping": 40053823,
+      "shipping_problems": 40245427,
+      "courier_assigned": 40053817
+    },
+    "courier": {
+      "id": 4283029,
+      "return_status_id": 40095319,
+      "shipping_succeeded": 142,
+      "courier_assigned": 40053637,
+      "awaiting_shipping": 40053640,
+      "shipping_problems": 40053643
+    }
+  },
+  "lead": {
+    "shipping_date": 843497,
+    "sdek_num": 843793,
+    "cour_name": 843471,
+    "order_items": 843837,
+    "comment": 843821,
+    "delivery_adr": 843855
+  },
+  "contact": {
+    "num": 293753
+  }
+}

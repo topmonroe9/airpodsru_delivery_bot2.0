@@ -1,6 +1,9 @@
 const _ = require('lodash')
 const {User} = require("../models/users");
 const admins = require('../bot/admins.json')
+const config = require('./crm-id-cfg.json')
+const moment = require('moment-timezone')
+moment.locale('ru');
 
 
 module.exports = {
@@ -8,39 +11,7 @@ module.exports = {
     shippingAccepted,
     shippingRejected,
     shippingSucceeded,
-}
-
-const config = {
-    pipelines: {
-        sdek: {
-            id: 4283047,
-            return_status_id: 40095322,
-            shipping_succeeded: 40053820,
-            awaiting_shipping: 40053823,
-            shipping_problems: 40245427,
-        },
-        courier: {
-            id: 4283029,
-            return_status_id: 40095319, // на возврате
-            shipping_succeeded: 142,
-            courier_assigned: 40053817, // Курьер назначен
-
-            awaiting_shipping: 40053640, // ожидается доставка
-            shipping_problems: 40053643, // Проблемы с доставкой
-
-        }
-    },
-    lead: {
-        shipping_date: 843497,
-        sdek_num: 843793,
-        cour_name: 843471,
-        order_items: 843837,
-        comment: 843821,
-        delivery_adr: 843855,
-    },
-    contact: {
-        num: 293753
-    }
+    collectDataFromLead
 }
 
 const pipelines = [
@@ -379,18 +350,26 @@ function collectDataFromLead(lead, contact) {
      * @msg_type: { enum: ['onNewOrderMsc', 'onAcceptedOrderMsc', 'onReturnMsc', 'onNewOrderSdek', 'onReturnSdek' ]},
      */
     if ( data.delivery_type === 'courier' ) {
-        data.msg_type = 'onNewOrderMsc'
         if ( data.status_id === config.pipelines.courier.awaiting_shipping )
             data.msg_type = 'onAcceptedOrderMsc'
-        if ( data.is_return === true )
+        else if ( data.is_return === true )
             data.msg_type = 'onReturnMsc'
+        else
+            data.msg_type = 'onNewOrderMsc'
     }
     if ( data.delivery_type === 'sdek' ) {
-        if ( data.status_id === config.pipelines.sdek.awaiting_shipping )
+        if ( data.status_id === config.pipelines.sdek.courier_assigned )
             data.msg_type = 'onNewOrderSdek'
         if ( data.is_return === true )
-            data.msg_type = 'onNewOrderSdek'
+            data.msg_type = 'onReturnSdek'
     }
+
+    /**
+     * Преобразовываем все объекты даты из UNIX в ISO
+     */
+    data.shipping_date = dateFormat(data.shipping_date)
+    data.created_at = dateFormat(data.created_at)
+    data.updated_at = dateFormat(data.updated_at)
 
     for (let i in data) {
         if (data[i] === undefined)
@@ -425,4 +404,8 @@ function getNextPipelineStage(pipeline) {
     else
         throw new Error('Невозможно определить id следующего этапа воронки')
     return newPipelineStage
+}
+
+function dateFormat(unixDate) {
+    return new Date( moment(unixDate * 1000) )
 }

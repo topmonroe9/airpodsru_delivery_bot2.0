@@ -14,6 +14,7 @@ const MessagesSchema = new mongoose.Schema({
     contact_phone: { type: String },
     shipping_address: { type: String },
     shipping_date: { type: String },
+    order_items: { type: String },
     comment: { type: String },
     sdek_id: { type: String },
 

@@ -325,7 +325,6 @@ function shippingSucceeded(lead, contact) {
 }
 
 function collectDataFromLead(lead, contact) {
-
     let data = {
         lead_id: lead.id,
         pipeline_id: lead.pipeline_id,
@@ -350,18 +349,29 @@ function collectDataFromLead(lead, contact) {
      * @msg_type: { enum: ['onNewOrderMsc', 'onAcceptedOrderMsc', 'onReturnMsc', 'onNewOrderSdek', 'onReturnSdek' ]},
      */
     if ( data.delivery_type === 'courier' ) {
-        if ( data.status_id === config.pipelines.courier.awaiting_shipping )
+        if ( data.status_id === config.pipelines.courier.awaiting_shipping ) {
             data.msg_type = 'onAcceptedOrderMsc'
-        else if ( data.is_return === true )
+            data.upcoming_status = config.pipelines.courier.awaiting_shipping
+        }
+        else if ( data.is_return === true ) {
             data.msg_type = 'onReturnMsc'
-        else
+            data.upcoming_status = config.pipelines.courier.return_status_id
+        }
+        else {
             data.msg_type = 'onNewOrderMsc'
+            data.upcoming_status = config.pipelines.courier.courier_assigned
+        }
     }
     if ( data.delivery_type === 'sdek' ) {
-        if ( data.status_id === config.pipelines.sdek.courier_assigned )
+        if ( data.status_id === config.pipelines.sdek.courier_assigned ) {
             data.msg_type = 'onNewOrderSdek'
-        if ( data.is_return === true )
+            data.upcoming_status = config.pipelines.sdek.courier_assigned
+        }
+        if ( data.is_return === true ) {
             data.msg_type = 'onReturnSdek'
+            data.upcoming_status = config.pipelines.sdek.return_status_id
+        }
+
     }
 
     /**

@@ -146,7 +146,7 @@ function emitMsgSentEvent(ctx, data) {
             'lead_id', 'status_id', 'pipeline_id', 'created_at',
             'updated_at', 'order_items', 'lead_id', 'shipping_date',
             'shipping_address', 'contact_name', 'contact_phone',
-            'sdek_id', 'msg_type'
+            'sdek_id', 'msg_type', 'comment', 'upcoming_status'
         ])
     const ctxdata =
         {

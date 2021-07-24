@@ -33,10 +33,10 @@ MongoClient.connect(mongodbURI, {useNewUrlParser: true, useUnifiedTopology: true
     });
 
 
-bot.catch((err, ctx) => {
+bot.catch((err, ctx) =>  {
     console.log(`Ooops, encountered an error for ${ctx.updateType}`, err)
     ctx.telegram.sendMessage(admins[0].chatId, `Произошла ошибка на сервере\n\`${err}\``)
-    ctx.telegram.sendMessage(admins[1].chatId, `Произошла ошибка на сервере\n\`${err}\``)
+    // ctx.telegram.sendMessage(admins[1].chatId, `Произошла ошибка на сервере\n\`${err}\``)
 })
 
 bot.command('whoami', async (ctx) => {
@@ -171,7 +171,7 @@ EventBus.on('courier-assigned', async (webhook) => {
     }
     const lead = await crmDataService.getLeadById(getLeadIdFromWebHook(webhook))
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
-    const {chatId, data} = await eventService.onCourierAssigned(lead.data, contact.data)
+    const {chatId, data} = await eventService.onCourierAssigned(lead.data, contact)
     await botService.sendNewOrderToCoruier(bot, chatId, data)
 })
 
@@ -200,7 +200,7 @@ EventBus.on('return-created', async (webhook) => {
     console.log('event return created')
     const lead = await crmDataService.getLeadById(getLeadIdFromWebHook(webhook))
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
-    const {chatId, data} = await eventService.onCourierAssigned(lead.data, contact.data)
+    const {chatId, data} = await eventService.onCourierAssigned(lead.data, contact)
     await botService.sendNewOrderToCoruier(bot, chatId, data)
 })
 
@@ -208,7 +208,6 @@ EventBus.on('return-created', async (webhook) => {
  * Уведомляем курьера о новом лиде. Новый лид сохраняется по ивенту msg.sent
  */
 EventBus.on('lead.updated', async payload => {
-    console.log(payload)
     console.log('catched  lead updated event')
     await botService.sendUpdatedOrderToCourier(bot, payload)
 })
@@ -226,12 +225,13 @@ bot.start((ctx) => {
 
 
 bot.action(/ACCEPT_SHIPPING_+/, async (ctx) => {
+    console.log(ctx)
     const order_id = ctx.match.input.substring(16);
     const lead = await crmDataService.getLeadById(order_id)
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
 
 
-    const {chatId, data, newLeadStageData} = await eventService.shippingAccepted(lead.data, contact.data)
+    const {chatId, data, newLeadStageData} = await eventService.shippingAccepted(lead.data, contact)
     if (data.delivery_type === 'courier')
         await botService.sendOrderDetailsToCourier(bot, chatId, data)
 
@@ -242,6 +242,7 @@ bot.action(/ACCEPT_SHIPPING_+/, async (ctx) => {
 bot.action(/REJECT_SHIPPING_+/, async (ctx) => {
     let order_id = ctx.match.input.substring(16);
     const lead = await crmDataService.getLeadById(order_id)
+    console.log(lead)
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
     const {newLeadStageData} = await eventService.shippingRejected(lead.data, contact)
     ctx.deleteMessage()
@@ -253,7 +254,7 @@ bot.action(/SHIPPING_SUCCESS_+/, async (ctx, bot) => {
     const lead = await crmDataService.getLeadById(order_id)
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
 
-    const newLeadStageData = eventService.shippingSucceeded(lead.data, contact.data)
+    const newLeadStageData = eventService.shippingSucceeded(lead.data, contact)
     ctx.deleteMessage()
     await crmDataService.moveLeadToNextStage(newLeadStageData)
 });

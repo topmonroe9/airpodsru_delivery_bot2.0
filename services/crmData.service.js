@@ -130,6 +130,7 @@ async function getContactById(contactId) {
     return await amocrm.get(`/api/v4/contacts/${contactId}`, {
         headers: {'Authorization': `Bearer ${await getAccessToken()}`}
     })
+        .then( res =>  { return res.data } )
 }
 
 async function moveLeadToNextStage(lead) {

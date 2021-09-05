@@ -16,14 +16,15 @@ const eventService = require('../services/events.service')
 const crmDataService = require("../services/crmData.service");
 
 
-const bot = new Telegraf('1807748047:AAF90Hn5v09drBQonYeH6H-NQCckUZ9Dx4Q')
-const admins = require('./admins.json')
-const mongodbURI = `mongodb://${process.env.MONGO_HOST}/${process.env.MONGO_DB}` //TODO Change to env
+const bot = new Telegraf(process.env.BOT_TOKEN);
+const admins = require('./admins.json');
+const messages = require("../models/messages");
+const mongodbURI = process.env.MONGO_URI 
 
 MongoClient.connect(mongodbURI, {useNewUrlParser: true, useUnifiedTopology: true})
     .then(client => {
         const db = client.db();
-        bot.use(session(db, {collectionName: 'sessions'}));
+        bot.use(session(db, {collectionName: process.env.MONGO_COLLNAME_SESSIONS}));
         bot.use(commandArgs())
 
         bot.launch()
@@ -52,7 +53,7 @@ function isAdmin(username) {
         if (admin.username === username)
             value = true
     })
-    console.log('Checking if ' + username + 'is admin')
+    console.log(username + 'tried admin command. Allowed: ' + value)
     return value
 }
 
@@ -242,11 +243,13 @@ bot.action(/ACCEPT_SHIPPING_+/, async (ctx) => {
 bot.action(/REJECT_SHIPPING_+/, async (ctx) => {
     let order_id = ctx.match.input.substring(16);
     const lead = await crmDataService.getLeadById(order_id)
-    console.log(lead)
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
     const {newLeadStageData} = await eventService.shippingRejected(lead.data, contact)
-    ctx.deleteMessage()
-    await crmDataService.moveLeadToNextStage(newLeadStageData)
+    await Promise.all([
+        ctx.deleteMessage(),
+        messages.deleteOne({lead_id: lead.data.id}),
+        crmDataService.moveLeadToNextStage(newLeadStageData)
+    ])
 });
 
 bot.action(/SHIPPING_SUCCESS_+/, async (ctx, bot) => {
@@ -255,16 +258,21 @@ bot.action(/SHIPPING_SUCCESS_+/, async (ctx, bot) => {
     const contact = await crmDataService.getContactById(lead.data._embedded.contacts[0].id)
 
     const newLeadStageData = eventService.shippingSucceeded(lead.data, contact)
-    ctx.deleteMessage()
-    await crmDataService.moveLeadToNextStage(newLeadStageData)
+    await Promise.all([
+        ctx.deleteMessage(),
+        crmDataService.moveLeadToNextStage(newLeadStageData),
+    ]);
 });
 
 bot.action(/SHIPPING_REJECTED_+/, async (ctx, bot) => {
     let order_id = ctx.match.input.substring(18);
     const lead = await crmDataService.getLeadById(order_id)
     const {chatId, data, newLeadStageData} = await eventService.shippingRejected(lead.data)
-    ctx.deleteMessage()
-    await crmDataService.moveLeadToNextStage(newLeadStageData)
+    await Promise.all([
+        ctx.deleteMessage(),
+        messages.deleteOne({lead_id: lead.data.id}),
+        crmDataService.moveLeadToNextStage(newLeadStageData)
+    ])
 });
 
 

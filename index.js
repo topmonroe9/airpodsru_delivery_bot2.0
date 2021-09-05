@@ -1,10 +1,14 @@
+if ( process.env.NODE_ENV !== 'production' ) {
+    const dotenv = require('dotenv');
+    dotenv.config();
+}
 const express = require('express');
 const app = express();
 require('./bot/bot');
 const mongoose = require('mongoose')
 
 require('./web/express')( app );
-const PORT = process.env.PORT || 80
+const PORT = process.env.PORT
 require('./services/updatesChecker')
 require('./services/msgSaver.service')
 
@@ -15,7 +19,7 @@ mongoose.set('useFindAndModify', false);
 mongoose.set('useUnifiedTopology', true);
 mongoose.set('useCreateIndex', true);
 
-const mongoURI = `mongodb://${process.env.MONGO_HOST}/${process.env.MONGO_DB}`// `mongodb://${process.env.MONGO_HOST}/${process.env.MONGO_DB}`
+const mongoURI = process.env.MONGO_URI 
 mongoose.connect(mongoURI)
     .then(() => console.log('Connected to MongoDB...'))
     .catch(() => {

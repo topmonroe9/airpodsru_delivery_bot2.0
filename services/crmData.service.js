@@ -13,7 +13,7 @@ const amocrm = axios.create({
 
 
 /**
- * AUTHENTICATION FUNCTIONS HERE
+ *      AUTHENTICATION FUNCTIONS HERE
  */
 async function fetchAccessTokenFromAccessCode(accessCode = undefined) {
     console.log('running function fetchAccessTokenFromAccessCode()')
@@ -40,7 +40,7 @@ async function fetchAccessTokenFromAccessCode(accessCode = undefined) {
             auth.key = 1
             await auth.save()
             accessGranted = true
-            console.log(res)
+            // console.log(res)
         })
         .catch( err => {
             console.log(err)
@@ -158,15 +158,22 @@ async function fetchLeadsByTrackingStatuses() {
                 "filter[statuses][1][pipeline_id]": cfg.pipelines.courier.id,
                 "filter[statuses][1][status_id]": cfg.pipelines.courier.return_status_id,
 
+                
                 "filter[statuses][2][pipeline_id]": cfg.pipelines.courier.id,
                 "filter[statuses][2][status_id]": cfg.pipelines.courier.awaiting_shipping,
-
+                
                 "filter[statuses][3][pipeline_id]": cfg.pipelines.sdek.id,
                 "filter[statuses][3][status_id]": cfg.pipelines.sdek.courier_assigned,
-
+                
+                
                 "filter[statuses][4][pipeline_id]": cfg.pipelines.sdek.id,
                 "filter[statuses][4][status_id]": cfg.pipelines.sdek.return_status_id,
+                
+                // "filter[statuses][5][pipeline_id]": cfg.pipelines.courier.id,
+                // "filter[statuses][5][status_id]": cfg.pipelines.courier.shipping_problems,
 
+                // "filter[statuses][6][pipeline_id]": cfg.pipelines.sdek.id,
+                // "filter[statuses][6][status_id]": cfg.pipelines.sdek.shipping_problems,
                 "limit": 250,
                 "with": "contacts"
             }
@@ -180,7 +187,7 @@ async function fetchLeadsByTrackingStatuses() {
 
 async function getAccessToken() {
     let token = await Auth.findOne({key: 1})
-    if (token.access_expires < Date.now())
+    if (token && token.access_expires < Date.now())
         token = await refreshToken()
     return token.access_token
 }

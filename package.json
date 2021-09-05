@@ -24,6 +24,7 @@
     "telegraf-session-mongodb": "^2.0.2"
   },
   "devDependencies": {
+    "dotenv": "^10.0.0",
     "nodemon": "^2.0.7"
   }
 }

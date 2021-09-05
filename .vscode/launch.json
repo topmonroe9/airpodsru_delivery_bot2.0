@@ -1,0 +1,23 @@
+{
+    // Используйте IntelliSense, чтобы узнать о возможных атрибутах.
+    // Наведите указатель мыши, чтобы просмотреть описания существующих атрибутов.
+    // Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "Launch Program",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/index.js",
+            "env": {
+                "Y_MAPS_API_KEY": "1f51510d-b577-4adc-8101-d7cd86a72004",
+                "CRM_CLIENT_ID": "562a8b5e-730d-440c-a98a-92cb898d33d7",
+                "CRM_CLIENT_SECRET": "XYStVkG8Oncer5nqyo0isLPlGTc4EBfIlWbVqGMAadicGYdSOJSE7hT9g60j6pS5",
+                "MONGO_URI": "mongodb+srv://airpods:WN5GjSyL5K9gZnp@cluster0.5doji.mongodb.net/dev"
+            }
+        }
+    ]
+}

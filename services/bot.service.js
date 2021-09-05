@@ -3,6 +3,7 @@ moment.locale('ru');
 const axios = require('axios')
 const EventBus = require('../eventBus')
 const _ = require('lodash')
+const crmidcfg = require('./crm-id-cfg.json')
 
 module.exports = {
     sendNewOrderToCoruier,
@@ -95,7 +96,7 @@ async function sendUpdatedOrderToCourier(bot, payload) {
         console.log('cant delete a fuckin meesage')
     }
     payload.crmLead.updating = true
-
+    
     if (payload.crmLead.msg_type === "onNewOrderMsc" || payload.crmLead.msg_type === "onNewOrderSdek"
         || payload.crmLead.msg_type === "onReturnMsc" || payload.crmLead.msg_type === "onReturnSdek")
         await bot.telegram.sendMessage(
